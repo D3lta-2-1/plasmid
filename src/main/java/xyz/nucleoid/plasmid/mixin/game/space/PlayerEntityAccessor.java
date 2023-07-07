@@ -9,5 +9,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface PlayerEntityAccessor
 {
     @Accessor("PLAYER_MODEL_PARTS")
-    TrackedData<Byte> playerModelParts();
+    static TrackedData<Byte> playerModelParts() {
+        return null;
+    }
 }

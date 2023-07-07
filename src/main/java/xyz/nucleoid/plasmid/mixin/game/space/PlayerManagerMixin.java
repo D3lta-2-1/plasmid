@@ -108,7 +108,7 @@ public abstract class PlayerManagerMixin implements PlayerManagerAccess {
     public void plasmid$removePlayer(ServerPlayerEntity player, PlayerSet watcher)
     {
         this.players.remove(player); //disable the old player
-        var world = player.getWorld();
+        var world = player.getServerWorld();
         world.removePlayer(player, CHANGED_DIMENSION);
         world.getChunkManager().sendToOtherNearbyPlayers(player, new EntitiesDestroyS2CPacket(player.getId()));
 
@@ -133,7 +133,7 @@ public abstract class PlayerManagerMixin implements PlayerManagerAccess {
         assert !this.playerMap.containsKey(player.getUuid()) : "Player " + player + " is already added or wasn't removed from the player manager";
         //this is based on the code just after the constructor of ServerPlayNetworkHandler in the onPlayerConnect method
         var serverPlayNetworkHandler = player.networkHandler;
-        var world = player.getWorld();
+        var world = player.getServerWorld();
         var worldProperties = world.getLevelProperties();
         GameRules gameRules = world.getGameRules();
         boolean doImmediateRespawn = gameRules.getBoolean(GameRules.DO_IMMEDIATE_RESPAWN);
@@ -147,7 +147,8 @@ public abstract class PlayerManagerMixin implements PlayerManagerAccess {
                     player.interactionManager.getPreviousGameMode(),
                     this.server.getWorldRegistryKeys(),
                     this.syncedRegistryManager,
-                    world.getDimensionKey(), world.getRegistryKey(),
+                    world.getDimensionKey(),
+                    world.getRegistryKey(),
                     BiomeAccess.hashSeed(world.getSeed()),
                     this.getMaxPlayerCount(),
                     this.viewDistance,
@@ -156,7 +157,8 @@ public abstract class PlayerManagerMixin implements PlayerManagerAccess {
                     !doImmediateRespawn,
                     world.isDebugWorld(),
                     world.isFlat(),
-                    player.getLastDeathPos()));
+                    player.getLastDeathPos(),
+                    0));
             serverPlayNetworkHandler.sendPacket(new FeaturesS2CPacket(FeatureFlags.FEATURE_MANAGER.toId(world.getEnabledFeatures())));
             serverPlayNetworkHandler.sendPacket(new CustomPayloadS2CPacket(CustomPayloadS2CPacket.BRAND, (new PacketByteBuf(Unpooled.buffer())).writeString(this.server.getServerModName())));
 
@@ -166,7 +168,16 @@ public abstract class PlayerManagerMixin implements PlayerManagerAccess {
         }
         else
         {
-            serverPlayNetworkHandler.sendPacket(new PlayerRespawnS2CPacket(player.world.getDimensionKey(), player.world.getRegistryKey(), BiomeAccess.hashSeed(player.getWorld().getSeed()), player.interactionManager.getGameMode(), player.interactionManager.getPreviousGameMode(), player.getWorld().isDebugWorld(), player.getWorld().isFlat(), (byte)1, player.getLastDeathPos()));
+            serverPlayNetworkHandler.sendPacket(new PlayerRespawnS2CPacket(player.getWorld().getDimensionKey(),
+                    player.getWorld().getRegistryKey(),
+                    BiomeAccess.hashSeed(player.getServerWorld().getSeed()),
+                    player.interactionManager.getGameMode(),
+                    player.interactionManager.getPreviousGameMode(),
+                    player.getWorld().isDebugWorld(),
+                    player.getServerWorld().isFlat(),
+                    (byte)1,
+                    player.getLastDeathPos(),
+                    0));
         }
 
         //originally from firstSpawn = false else statement

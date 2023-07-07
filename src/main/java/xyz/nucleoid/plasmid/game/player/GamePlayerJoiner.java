@@ -65,7 +65,7 @@ public final class GamePlayerJoiner {
     }
 
     public static GameSpacePlayers.OfferContext getContext(ServerPlayerEntity actualPlayer, GameSpace targetGameSpace) {
-        var MODEL_PARTS = ((PlayerEntityAccessor)actualPlayer).playerModelParts();
+        var MODEL_PARTS = PlayerEntityAccessor.playerModelParts();
         var newPlayer = new ServerPlayerEntity(actualPlayer.server, targetGameSpace.getWorlds().iterator().next(), actualPlayer.getGameProfile());
         var playerManager = (PlayerManagerAccess) Objects.requireNonNull(actualPlayer.getServer()).getPlayerManager();
 

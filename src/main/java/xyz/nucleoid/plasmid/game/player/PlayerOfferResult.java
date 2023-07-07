@@ -41,7 +41,8 @@ public interface PlayerOfferResult {
 
         Accept(ServerWorld world, Vec3d position) {
             this(player -> {
-                player.setWorld(world);
+                player.setServerWorld(world);
+                //player.setWorld(world);
                 player.setPosition(position.x, position.y, position.z);
             });
         }
