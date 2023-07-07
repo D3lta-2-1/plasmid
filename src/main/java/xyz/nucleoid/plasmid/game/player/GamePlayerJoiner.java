@@ -53,7 +53,9 @@ public final class GamePlayerJoiner {
         }
 
         for (var player : players) {
-            var result = gameSpace.getPlayers().offer( getContext(player, gameSpace) );
+            var context = getContext(player, gameSpace);
+            if(context == null) continue;
+            var result = gameSpace.getPlayers().offer( context );
             if (result.isError()) {
                 results.playerErrors.put(player, result.error());
             }
@@ -68,7 +70,10 @@ public final class GamePlayerJoiner {
         var playerManager = (PlayerManagerAccess) Objects.requireNonNull(actualPlayer.getServer()).getPlayerManager();
 
         var oldGameSpace = GameSpaceManager.get().byPlayer(actualPlayer);
-        if(oldGameSpace == null)
+
+        if (oldGameSpace == targetGameSpace)
+            return null; //return null if the player is already in the game space
+        else if(oldGameSpace == null)
             return new GameSpacePlayers.OfferContext(newPlayer,
                 () -> { //executed when the player joins the game space
                     playerManager.plasmid$savePlayerData(actualPlayer); //save the player data
@@ -99,8 +104,7 @@ public final class GamePlayerJoiner {
 
                     playerManager.plasmid$AddPlayerAndSendDefaultJoinPacket(actualPlayer, GameSpaceManager.get().getPlayersNotInGame(), false);
             });
-        else if (oldGameSpace == targetGameSpace)
-            return new GameSpacePlayers.OfferContext(actualPlayer, () -> {}, false, ($, $2) -> {}); //if the player is already in the game space, we only need to pass the player trigger the already added security, ugly, but it works
+
         else //the player where in another game space
         //if the player is already in a game space, we need to remove them from it
             return new GameSpacePlayers.OfferContext(newPlayer,

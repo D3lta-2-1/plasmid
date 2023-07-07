@@ -14,7 +14,7 @@ import java.util.function.BiConsumer;
 public final class ManagedGameSpacePlayers implements GameSpacePlayers {
     private final ManagedGameSpace space;
     final MutablePlayerSet set;
-    private final Map<ServerPlayerEntity, BiConsumer<ServerPlayerEntity, GameSpace>> leaveHandlers = new HashMap<>();
+    private final Map<UUID, BiConsumer<ServerPlayerEntity, GameSpace>> leaveHandlers = new HashMap<>();
 
     ManagedGameSpacePlayers(ManagedGameSpace space) {
         this.space = space;
@@ -67,7 +67,7 @@ public final class ManagedGameSpacePlayers implements GameSpacePlayers {
                 this.set.add(player);
                 this.space.onAddPlayer(player);
                 playerManager.plasmid$AddPlayerAndSendDefaultJoinPacket(player, this, context.sendFirstJoinPacket()); //add the player to the player manager and send the default join packet
-                this.leaveHandlers.put(player, context.leaveHandler());
+                this.leaveHandlers.put(player.getUuid(), context.leaveHandler());
 
 
 
@@ -92,7 +92,7 @@ public final class ManagedGameSpacePlayers implements GameSpacePlayers {
         if (this.set.contains(player)) {
             this.space.onPlayerRemove(player);
             this.set.remove(player);
-            this.leaveHandlers.remove(player).accept(player, this.space);
+            this.leaveHandlers.remove(player.getUuid()).accept(player, this.space);
             this.attemptGarbageCollection();
             return true;
         } else {
@@ -107,9 +107,10 @@ public final class ManagedGameSpacePlayers implements GameSpacePlayers {
         }
         this.space.onPlayerRemove(player);
         this.set.remove(player);
+        var handler = this.leaveHandlers.remove(player.getUuid());
         this.attemptGarbageCollection();
 
-        return this.leaveHandlers.remove(player);
+        return handler;
     }
 
     void clear() {
